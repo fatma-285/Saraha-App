@@ -6,6 +6,8 @@ import { decrypt, encrypt } from "../../common/utils/security/encrypt.security.j
 import { Compare, Hash } from "../../common/utils/security/hash.security.js";
 import {v4 as uuidv4} from "uuid";
 import { generateToken } from "../../common/utils/security/token.service.js";
+import {OAuth2Client} from 'google-auth-library';
+import { SECRET_KEY } from "../../../config/config.service.js";
 
 export const signUp = async (req, res, next) => {
     try {
@@ -18,6 +20,45 @@ export const signUp = async (req, res, next) => {
         }
         const user = await db_services.create({ model: userModel, data: { fullName, email, password:Hash({cipherText:password}), gender, age, phone:encrypt(phone) } });
         successResponse({res,status:201,message:"user created successfully..👌",data:user})
+    } catch (error) {
+        throw new Error(error.message)
+    }
+}
+export const signUpWithGmail = async (req, res, next) => {
+    try {
+        const { idToken} = req.body;
+        console.log({idToken});
+const client = new OAuth2Client();
+  const ticket = await client.verifyIdToken({
+      idToken,
+      audience: "434943204420-roidgnlijsdckhkud1p5961umadcj412.apps.googleusercontent.com", 
+  });
+  const payload = ticket.getPayload();
+console.log(payload);
+   const {email,name,picture,email_verified}=payload;
+   let user=await db_services.findOne({model:userModel,filter:{email}});
+   if(!user){
+    //register
+    user=await db_services.create({model:userModel,data:{
+        email,
+        fullName:name,
+        profilePicture:picture,
+        confirmed:email_verified,
+        provider:ProviderEnum.google
+    }});
+   }
+   //login
+   if(user.provider!==ProviderEnum.google){
+    throw new Error("provider is not google",{cause:400})
+   }
+       const access_token =generateToken({
+            payload:{id:user._id,email:user.email,role:user.role},
+            secret_key:SECRET_KEY,
+            options:{            
+            expiresIn:"1d",
+        }
+    });
+successResponse({res,message:"user logged in successfully..👌",data:{access_token}})
     } catch (error) {
         throw new Error(error.message)
     }
@@ -35,8 +76,8 @@ export const login = async (req, res, next) => {
             throw new Error("wrong password..",{cause:400})
         }
         const access_token =generateToken({
-            payload:{id:user._id,email:user.email},
-            secret_key:"bate5",
+            payload:{id:user._id,email:user.email,role:user.role},
+            secret_key:SECRET_KEY,
             options:{            
             expiresIn:"1d",
             // noTimestamp:true,

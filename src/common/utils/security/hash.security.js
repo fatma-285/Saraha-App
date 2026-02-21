@@ -1,7 +1,7 @@
 import { compareSync, hashSync } from "bcrypt";
 
-export const Hash=({cipherText,saltRounds=12}={})=>{
- return hashSync(cipherText,saltRounds);
+export const Hash=({cipherText,saltRounds=process.env.SALT_ROUNDS}={})=>{
+ return hashSync(cipherText,Number(saltRounds));
 }
 
 export const Compare=({plainText,cipherText}={})=>{
