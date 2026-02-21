@@ -1,3 +1,4 @@
+import { SECRET_KEY } from "../../../config/config.service.js";
 import { verifyToken } from "../../common/utils/security/token.service.js";
 import * as db_services from "../../DB/db_services.js";
 import userModel from "../../DB/models/user.model.js";
@@ -17,7 +18,7 @@ export const authentication=async(req,res,next)=>{
 
     const decoded=verifyToken({
         token,
-        secret_key:"bate5"
+        secret_key:SECRET_KEY
         ,options:{
         // ignoreExpiration:true
     }});

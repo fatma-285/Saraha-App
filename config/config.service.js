@@ -2,11 +2,11 @@
 import dotenv from 'dotenv'
 import {resolve} from 'node:path'
 let envPaths={
-    production:"config/.env.production",
-    development:"config/.env.development"
+    production:".env.production",
+    development:".env.development"
 }
 const NODE_ENV=process.env.NODE_ENV;
-dotenv.config({path:resolve(`${envPaths[NODE_ENV]}`)})
+dotenv.config({path:resolve(`config/${envPaths[NODE_ENV]}`)})
 
 
 export const PORT=+process.env.PORT;
