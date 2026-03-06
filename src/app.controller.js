@@ -11,7 +11,7 @@ const port = PORT
     app.use(cors({origin:"*"}),express.json())
     connectDB();
     app.get('/', (req, res) => res.status(200).json({message:'Hello to my Saraha App...😁😎'}))
-    
+    app.use("/uploads",express.static("uploads"));
     app.use("/user",userRouter);
     app.use("/message",messageRouter);  
 
