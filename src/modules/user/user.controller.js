@@ -25,6 +25,11 @@ userRouter.get("/Profile", authentication, authorize([RoleEnum.user]), US.getPro
 userRouter.patch("/update-profile", authentication, US.updateProfile);
 userRouter.patch("/update-password",authentication,validation(UV.updatePasswordSchema), US.updatePassword);
 userRouter.get("/share-profile/:id",validation(UV.shareProfileSchema), US.shareProfile);
+userRouter.post("/logout", authentication, US.logout);
+userRouter.patch("/profile-Image",authentication,
+    multer_host(multer_enum.image).fields([
+    { name: "profilePicture", maxCount: 1 },
+]),US.updateProfileImg);
 
-
+userRouter.delete("/profile-Image",authentication,US.deleteProfileImg);
 export default userRouter;

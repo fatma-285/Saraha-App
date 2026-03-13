@@ -73,3 +73,15 @@ export const updatePasswordSchema={
         confirmPassword:joi.string().valid(joi.ref("newPassword")).required(),
     }).required()
 }
+
+export const updateProfilePictureSchema = {
+    file: general_rules.file.required().messages({
+        "any.required": "profile picture is required",
+    }),
+}
+
+export const updateCoverPictureSchema = {
+    file: general_rules.file.required().messages({
+        "any.required": "cover picture is required",
+    }),
+}

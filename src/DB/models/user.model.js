@@ -47,19 +47,21 @@ const userSchema = new mongoose.Schema({
         default: RoleEnum.user
     },
     profilePicture: {
-        public_id: { type: String, required: true },
-        secure_url: { type: String, required: true }
+        public_id: { type: String },
+        secure_url: { type: String }
     },
     coverPictures: [{
-        public_id: { type: String, required: true },
-        secure_url: { type: String, required: true }
+        public_id: { type: String},
+        secure_url: { type: String }
     }],
+    changeCredentials:Date,
     confirmed: Boolean,
     provider: {
         type: String,
         enum: Object.values(ProviderEnum),
         default: ProviderEnum.system
-    }
+    },
+    
 },
     {
         timestamps: true,
@@ -75,6 +77,8 @@ userSchema.virtual("fullName").get(function () {
     const [firstName, lastName] = fullName.split(" ");
     this.set({ firstName, lastName });
 })
+
+
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
 
