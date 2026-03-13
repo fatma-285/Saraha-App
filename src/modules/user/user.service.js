@@ -10,7 +10,7 @@ import { PREFIX, REFRESH_SECRET_KEY, SECRET_KEY } from "../../../config/config.s
 import cloudinary from "../../common/utils/cloudinary.js";
 import revokeTokenModel from "../../DB/models/revokeToken.model.js";
 import { randomUUID } from "crypto"
-import { del, get_key, keys, revoke_key, set } from "../../DB/redis/redis.service.js";
+import { del, get, get_key, keys, revoke_key, set } from "../../DB/redis/redis.service.js";
 
 export const signUp = async (req, res, next) => {
     try {
@@ -158,6 +158,16 @@ export const login = async (req, res, next) => {
 }
 
 export const getProfile = async (req, res, next) => {
+    const key=`profile::${req.user._id}`;
+    const userExist=await get(key);
+    if(userExist){
+        return successResponse({ res, data: { ...userExist, phone: decrypt(userExist.phone) } })
+    }
+    await set({
+        key,
+        value:req.user,
+        ttl:60*60
+    })
     successResponse({ res, data: { ...req.user._doc, phone: decrypt(req.user.phone) } })
 }
 
@@ -229,6 +239,7 @@ export const updateProfile = async (req, res, next) => {
     if (!user) {
         throw new Error("user not found..🤷", { cause: 400 })
     }
+    await del(`profile::${req.user._id}`);
     successResponse({ res, data: user })
 }
 export const updatePassword = async (req, res, next) => {
