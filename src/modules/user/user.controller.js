@@ -17,19 +17,44 @@ userRouter.post("/Signup",
         { name: "coverPictures", maxCount: 5 },
     ]),
     validation(UV.signUpSchema),
-      US.signUp);
-userRouter.post("/Signup/Gmail", US.signUpWithGmail);
-userRouter.post("/Login", validation(UV.signInSchema), US.login);
-userRouter.post("/refresh-token", US.refreshToken);
-userRouter.get("/Profile", authentication, authorize([RoleEnum.user]), US.getProfile);
-userRouter.patch("/update-profile", authentication, US.updateProfile);
-userRouter.patch("/update-password",authentication,validation(UV.updatePasswordSchema), US.updatePassword);
-userRouter.get("/share-profile/:id",validation(UV.shareProfileSchema), US.shareProfile);
-userRouter.post("/logout", authentication, US.logout);
-userRouter.patch("/profile-Image",authentication,
-    multer_host(multer_enum.image).fields([
-    { name: "profilePicture", maxCount: 1 },
-]),US.updateProfileImg);
+    US.signUp);
 
-userRouter.delete("/profile-Image",authentication,US.deleteProfileImg);
+userRouter.post("/confirm-email", validation(UV.confirmEmailSchema), US.confirmEmail);
+
+userRouter.post("/resend-otp",
+    // validation(UV.confirmEmailSchema),
+    US.resendOtp);
+
+userRouter.post("/Signup/Gmail", US.signUpWithGmail);
+
+userRouter.post("/Login", validation(UV.signInSchema), US.login);
+
+userRouter.post("/confirm-login", US.confirmLogin);
+
+userRouter.get("/verify-otp",authentication ,US.enableTwoStepsVerification);
+
+userRouter.post("/confirm-verify-otp",authentication ,US.confirmTwoStepsVerification);
+
+userRouter.post("/refresh-token", US.refreshToken);
+
+userRouter.get("/Profile", authentication, authorize([RoleEnum.user]), US.getProfile);
+
+userRouter.patch("/update-profile", authentication, US.updateProfile);
+
+userRouter.patch("/update-password", authentication, validation(UV.updatePasswordSchema), US.updatePassword);
+
+userRouter.post("/forgot-password", US.forgetPassword);
+
+userRouter.post("/reset-password", US.resetPassword);
+
+userRouter.get("/share-profile/:id", validation(UV.shareProfileSchema), US.shareProfile);
+
+userRouter.post("/logout", authentication, US.logout);
+
+userRouter.patch("/profile-Image", authentication,
+    multer_host(multer_enum.image).fields([
+        { name: "profilePicture", maxCount: 1 },
+    ]), US.updateProfileImg);
+
+userRouter.delete("/profile-Image", authentication, US.deleteProfileImg);
 export default userRouter;

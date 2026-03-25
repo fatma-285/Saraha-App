@@ -85,3 +85,10 @@ export const updateCoverPictureSchema = {
         "any.required": "cover picture is required",
     }),
 }
+
+export const confirmEmailSchema={
+    body:joi.object({
+        email:general_rules.email.required(),
+        otp:joi.string().required(),
+    }).required()
+}

@@ -7,6 +7,37 @@ return `revoke_token::${userId}::${jti}`
 export const get_key=({userId})=>{
 return `revoke_token::${userId}`
 }   
+
+export const login_key=({email})=>{
+    return `login::${email}`
+}
+export const loginConfirm_key=({email})=>{
+    return `login::${email}::confirm`
+}
+
+export const twoStepsVerification_key=({email})=>{
+    return `twoStepsVerification::${email}`
+}
+
+export const block_login_key=({email})=>{
+    return `${login_key({email})}::block`
+}
+export const otp_key=({email})=>{
+    return `otp::${email}`
+}
+
+export const max_otp_key=({email})=>{
+    return `${otp_key({email})}::max_tries`
+}
+
+export const password_otp_key=({email})=>{
+    return `${otp_key({email})}::password`
+}
+
+export const block_otp_key=({email})=>{
+    return `${otp_key({email})}::block`
+}
+
 export const set = async ({ key, value, ttl } = {}) => {
     try {
         const data = typeof value === "string" ? value : JSON.stringify(value);
@@ -86,5 +117,13 @@ export const expire=async (key, ttl) => {
         return await redisClient.expire(key, ttl);
     } catch (error) {
         console.log("error on expire data from redis", error);
+    }
+}
+
+export const incr=async (key) => {
+    try {
+        return await redisClient.incr(key);
+    } catch (error) {
+        console.log("error on incr data from redis", error);
     }
 }

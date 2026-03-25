@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { RoleEnum, GenderEnum, ProviderEnum } from "../../common/enums/user.enum.js";
+import { create } from "node:domain";
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -56,6 +57,7 @@ const userSchema = new mongoose.Schema({
     }],
     changeCredentials:Date,
     confirmed: Boolean,
+    twoStepsVerification:Boolean,
     provider: {
         type: String,
         enum: Object.values(ProviderEnum),
@@ -71,13 +73,21 @@ const userSchema = new mongoose.Schema({
         }
     })
 
+userSchema.index({createdAt: 1},{
+    expireAfterSeconds: 60*30  , 
+    partialFilterExpression: {
+        confirmed: { $exists: false } ,
+        provider: ProviderEnum.system
+    }
+}); 
+
+
 userSchema.virtual("fullName").get(function () {
     return `${this.firstName} ${this.lastName}`;
 }).set(function (fullName) {
     const [firstName, lastName] = fullName.split(" ");
     this.set({ firstName, lastName });
 })
-
 
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
