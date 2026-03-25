@@ -73,14 +73,16 @@ const userSchema = new mongoose.Schema({
         }
     })
 
-userSchema.index({createdAt: 1},{
-    expireAfterSeconds: 60*30  , 
+userSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 60 * 60 * 24, // 24 hours
     partialFilterExpression: {
-        confirmed: { $exists: false } ,
-        provider: ProviderEnum.system
+      confirmed: { $exists: false },
+      provider: ProviderEnum.system
     }
-}); 
-
+  }
+);
 
 userSchema.virtual("fullName").get(function () {
     return `${this.firstName} ${this.lastName}`;
