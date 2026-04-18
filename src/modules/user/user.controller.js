@@ -8,8 +8,11 @@ import { validation } from "../../common/middleware/validation.middleware.js";
 import multer from "multer";
 import { multer_host, multer_local } from "../../common/middleware/multer.js";
 import { multer_enum } from "../../common/enums/multer.enum.js";
+import messageRouter from "../message/message.controller.js";
 
-const userRouter = Router();
+const userRouter = Router({caseSensitive:true,strict:true});
+
+userRouter.use("/:userId/messages",messageRouter);
 
 userRouter.post("/Signup",
     multer_host(multer_enum.image).fields([

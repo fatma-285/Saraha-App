@@ -3,7 +3,7 @@ import { connectDB } from './DB/connectionDB.js'
 import userRouter from './modules/user/user.controller.js'
 import messageRouter from './modules/message/message.controller.js'
 import cors from "cors"
-import { PORT } from '../config/config.service.js'
+import { PORT, WHITELIST } from '../config/config.service.js'
 import { redisConnection } from './DB/redis/redis.db.js'
 import * as redis_servise from './DB/redis/redis.service.js'
 
@@ -11,7 +11,17 @@ const app = express()
 const port = PORT
 
 const bootstrap =async () => {
-    app.use(cors({ origin: "*" }), express.json())
+    // const whiteList=["http://localhost:3000",undefined];
+    const corsOptions={
+        origin:(origin,callback)=>{
+            if([...WHITELIST,undefined].includes(origin)){
+                callback(null,true)
+            }else{
+                callback(new Error("not allowed by cors"))
+            }
+        }
+    }
+    app.use(cors(corsOptions), express.json())
     connectDB();
     redisConnection();
     await redis_servise.set({ key: "hello", value: "world", ttl: 60 });

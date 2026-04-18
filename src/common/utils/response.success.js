@@ -1,3 +1,3 @@
-export  const successResponse=({res,status=200,message="Success",data=undefined}={})=>{
-return res.status(status).json({message,data})
+export  const successResponse=({res,status=200,message="Success",data=undefined,metaData=undefined}={})=>{
+return res.status(status).json({message,metaData,data})
 }

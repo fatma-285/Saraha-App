@@ -12,6 +12,40 @@ import revokeTokenModel from "../../DB/models/revokeToken.model.js";
 import { randomUUID } from "crypto"
 import { block_login_key, block_otp_key, del, get, get_key, incr, keys, login_key, loginConfirm_key, max_otp_key, otp_key, password_otp_key, revoke_key, set, ttl, twoStepsVerification_key } from "../../DB/redis/redis.service.js";
 import { generateOtp, sendEmail } from "../../common/utils/email/send-email.js";
+import { eventEmitter } from "../../common/utils/email/email.events.js";
+import { emailTemplete } from "../../common/utils/email/email.templete.js";
+import { emailEnum } from "../../common/enums/email.enum.js";
+
+const sendEmailOtp=async(email,fullName)=>{
+     const isBlocked = await ttl(block_otp_key({ email }))
+        if (isBlocked > 0) {
+            await del(max_otp_key({ email }))
+            throw new Error(`otp blocked for ${isBlocked} seconds`, { cause: 400 })
+        }
+        await del(block_otp_key({ email }))
+        const ttlSent = await ttl(otp_key({ email }))
+        if (ttlSent > 0) {
+            throw new Error(`otp sent recently, wait for ${ttlSent} seconds`, { cause: 400 })
+        }
+
+        const maxOtp = await get(max_otp_key({ email }))
+        if (maxOtp >= 3) {
+            await set({ key: block_otp_key({ email }), value: 1, ttl: 60 })
+            throw new Error("otp limit exceeded..", { cause: 400 })
+        }
+
+        const otp = await generateOtp()
+        // eventEmitter.emit(emailEnum.confirmEmail,async()=>{
+ await sendEmail({
+            to: email,
+            subject: "welcome to saraha app",
+            html: emailTemplete(otp, fullName),
+        })
+        await set({ key: otp_key({ email }), value: Hash({ cipherText: `${otp}` }), ttl: 60 * 2 })
+        await incr(max_otp_key({ email }))
+
+    // })
+}
 
 export const signUp = async (req, res, next) => {
     try {
@@ -68,15 +102,18 @@ export const signUp = async (req, res, next) => {
         }
 
         const otp = await generateOtp()
-        await sendEmail({
+        // eventEmitter.emit(emailEnum.confirmEmail,async()=>{
+            
+        // })
+            await sendEmail({
             to: email,
             subject: "welcome to saraha app",
-            html: `<h1>hello ${fullName}</h1>
-            <h2>your otp is ${otp}</h2>`
+            html: emailTemplete(otp,fullName)
         })
         await set({ key: otp_key({ email }), value: Hash({ cipherText: `${otp}` }), ttl: 60 * 2 })
         await set({ key: max_otp_key({ email }), value: 1, ttl: 30 })
 
+        
         successResponse({ res, status: 201, message: "user created successfully..👌", data: { user } })
     } catch (error) {
         throw new Error(error.message)
@@ -128,32 +165,8 @@ export const resendOtp = async (req, res, next) => {
             throw new Error("user already confirmed..", { cause: 400 })
         }
 
-        const isBlocked = await ttl(block_otp_key({ email }))
-        if (isBlocked > 0) {
-            await del(max_otp_key({ email }))
-            throw new Error(`otp blocked for ${isBlocked} seconds`, { cause: 400 })
-        }
-        await del(block_otp_key({ email }))
-        const ttlSent = await ttl(otp_key({ email }))
-        if (ttlSent > 0) {
-            throw new Error(`otp sent recently, wait for ${ttlSent} seconds`, { cause: 400 })
-        }
+        await sendEmailOtp(email, user.fullName);
 
-        const maxOtp = await get(max_otp_key({ email }))
-        if (maxOtp >= 3) {
-            await set({ key: block_otp_key({ email }), value: 1, ttl: 60 })
-            throw new Error("otp limit exceeded..", { cause: 400 })
-        }
-
-        const otp = await generateOtp()
-        await sendEmail({
-            to: email,
-            subject: "welcome to saraha app",
-            html: `<h1>hello ${user.fullName}</h1>
-            <h2>your otp is ${otp}</h2>`
-        })
-        await set({ key: otp_key({ email }), value: Hash({ cipherText: `${otp}` }), ttl: 60 * 2 })
-        await incr(max_otp_key({ email }))
         successResponse({ res, status: 200, message: "otp sent successfully..👌" })
     } catch (error) {
         throw new Error(error.message)
@@ -446,7 +459,7 @@ export const updatePassword = async (req, res, next) => {
     const hash = Hash({ cipherText: newPassword });
 
     req.user.password = hash;
-
+req.user.changeCredentials = new Date();
     await req.user.save();
 
     successResponse({ res })
